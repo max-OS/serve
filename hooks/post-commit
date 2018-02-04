@@ -1,0 +1,17 @@
+#! /bin/zsh -f
+git diff-tree --no-commit-id --name-only -r --find-renames HEAD |
+grep (Formula|Casks)/*.rb | while read
+do
+  branch=$REPLY:t:r-${${REPLY:h:l}/ks/k}
+
+  git format-patch HEAD^
+  git clone git@github.com:max-os/homebrew-services.git /tmp/$branch
+  mv *.patch $_
+  pushd $_
+  git checkout -b $branch
+  git am *.patch
+  git push --set-upstream origin $branch
+  git show -s --format=%B | hub pull-request -F -
+
+  trap "rm -r /tmp/$branch" EXIT ERR
+done
